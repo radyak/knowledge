@@ -1,5 +1,5 @@
 ### Frontend Build
-FROM node:lts-alpine AS frontend-build
+FROM node:lts-alpine
 
 WORKDIR /app
 

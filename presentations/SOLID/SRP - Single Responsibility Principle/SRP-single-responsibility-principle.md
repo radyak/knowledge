@@ -1,12 +1,12 @@
-# Single Responsibility Principle
-## The "S" in SOLID
+## Single Responsibility Principle
+### The "S" in SOLID
 
 ---
 
 <!-- .slide: data-transition="fade" -->
-# Single Responsibility Principle (SRP)
+## Single Responsibility Principle (SRP)
 
-![Robert C. Martin](https://upload.wikimedia.org/wikipedia/commons/2/27/Robert_C._Martin_surrounded_by_computers.jpg)
+<img style="width: 300px; float: left" src="https://upload.wikimedia.org/wikipedia/commons/2/27/Robert_C._Martin_surrounded_by_computers.jpg">
 
 _"A class should have only one reason to change."_  
 — Robert C. Martin, *Clean Architecture*
