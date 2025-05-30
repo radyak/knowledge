@@ -1,0 +1,13 @@
+version: '3.4'
+
+services:
+
+  presentation:
+    container_name: presentation-SRP-single-responsibility-principle
+    image: radyak/reveal.js:latest
+    # build: .
+    restart: always
+    ports:
+      - 8000:8000
+    volumes:
+      - .:/app/presentations
