@@ -3,189 +3,134 @@
 
 ---
 
-<!-- .slide: data-transition="fade" -->
-## Single Responsibility Principle (SRP)
+### What is the "SRP"?
 
-<img style="width: 300px; float: left" src="https://upload.wikimedia.org/wikipedia/commons/2/27/Robert_C._Martin_surrounded_by_computers.jpg">
+<img style="width: 300px; float: left; margin-top: 10px" src="https://upload.wikimedia.org/wikipedia/commons/2/27/Robert_C._Martin_surrounded_by_computers.jpg">
 
 _"A class should have only one reason to change."_  
-— Robert C. Martin, *Clean Architecture*
+— Robert C. Martin
 
-> "A class should have only one reason to change."
-> 
-> — Robert C. Martin, *Clean Code*
+--
 
----
+### And what does that mean?
 
-<!-- .slide: data-transition="fade" -->
-## Synonymous Phrases
-
-- **One job per class**
-- **Do one thing and do it well**
-- **High cohesion, low responsibility scope**
-- **Separation of concerns**
-- **"Single reason to change"**
+- One sort of job per class 📋  <!-- .element: class="fragment" data-fragment-index="0" -->
+- Do one thing and do it well ✨ <!-- .element: class="fragment" data-fragment-index="1" -->
+- High cohesion, low responsibility scope 🧬 <!-- .element: class="fragment" data-fragment-index="2" -->
+- Minimal coupling 🔗 <!-- .element: class="fragment" data-fragment-index="3" -->
+- Separation of concerns (SoC) 🧩 <!-- .element: class="fragment" data-fragment-index="4" -->
 
 ---
 
-## What Does It Mean?
+### Real-World Example:
+#### Store employee(s) 🏪
 
-- **One job per class** 📋
-- **Single focus** 🎯
-- **Clear purpose** ✨
-- **Minimal coupling** 🔗
+--
 
----
+❌ **Bad:** A Swiss Army Knife Employee
+  - Collects money from customers
+  - Also stocks shelves
+  - Also handles customer complaints
+  - Also cleans the store
 
-<!-- .slide: data-transition="fade" -->
-## Real-World Analogy
+--
 
-**A chef vs. a restaurant manager**
-
-- A chef is responsible for cooking — one clear responsibility.
-- A manager handles staffing, logistics, customer service.
-- Mixing both in one role causes confusion and inefficiency.
-
-**➡ Split responsibilities to increase clarity and adaptability.**
-
----
-
-
-## Real-World Example 🏪
-
-**Bad:** A Swiss Army Knife Employee
-- Cashier who also stocks shelves
-- Also handles customer complaints
-- Also manages inventory
-- Also cleans the store
-
-**Good:** Specialized Roles
-- **Cashier:** Only handles transactions
-- **Stocker:** Only manages inventory
-- **Customer Service:** Only handles complaints
-- **Janitor:** Only maintains cleanliness
+✅ **Good:** Specialized Roles
+  - **Cashier:** Only handles transactions
+  - **Stocker:** Only manages inventory
+  - **Customer Service:** Only handles complaints
+  - **Janitor:** Only maintains cleanliness
 
 ---
 
-## Code Example: The Problem ❌
+### Code Example:
+#### A DocumentService 📃
+
+--
+
+### ❌ Bad
 
 ```javascript
-class UserManager {
-  constructor() {
-    this.users = [];
+class DocumentService {
+
+  getDocument(id): Observable<Document> {
+    return this.http.get<DocumentDto>(`/documents/${id}`)
+      .pipe(
+        map((d: DocumentDto) => this.mapToDocument(d))
+      );
   }
 
-  // User management
-  addUser(user) { this.users.push(user); }
-  removeUser(id) { /* remove user logic */ }
-  
-  // Email functionality
-  sendWelcomeEmail(user) {
-    console.log(`Sending email to ${user.email}`);
-    // Email sending logic...
-  }
-  
-  // Database operations
-  saveToDatabase() {
-    console.log('Saving users to database...');
-    // Database logic...
-  }
-  
-  // Logging
-  logUserActivity(action, user) {
-    console.log(`${action}: ${user.name}`);
-    // Logging logic...
+  secureDocument(doc: Document): Observable<void> {
+    doc.secure = true;
+    const dto = this.mapToDocumentDto(doc);
+    return this.http.put<void>(`/documents/${id}`, dto);
   }
 }
 ```
 
-**Problems:** Too many responsibilities! 😵
+--
 
----
+**Problem:** Too many responsibilities! 😵
+- Communicates with API
+- Handles & manipulates functional data
+- Translates between representations
 
-## Code Example: The Solution ✅
+⚡ It mixes concerns of technical and functional level!
+
+--
+
+### ✅ Better 
+
+Handle & manipulate functional data:
 
 ```javascript
-// Single responsibility: User data management
-class UserRepository {
-  constructor() { this.users = []; }
-  
-  addUser(user) { this.users.push(user); }
-  removeUser(id) { /* remove user logic */ }
-  getAllUsers() { return this.users; }
-}
+class DocumentService {
+  getDocument(id): Observable<Document> {
+    return this.documentClient.getDocument(id)
+      .pipe(
+        map((d: DocumentDto) => this.documentMapper.fromDto(d))
+      );
+  }
 
-// Single responsibility: Email operations
-class EmailService {
-  sendWelcomeEmail(user) {
-    console.log(`Sending email to ${user.email}`);
-    // Email sending logic...
+  secureDocument(doc: Document): Observable<void> {
+    doc.secure = true;
+    const dto = this.documentMapper.toDto(doc);
+    return this.documentClient.updateDocument(dto);
   }
 }
+```
 
-// Single responsibility: Database operations
-class DatabaseService {
-  saveUsers(users) {
-    console.log('Saving users to database...');
-    // Database logic...
+--
+
+Communicate with API:
+
+```javascript
+class DocumentClient {
+
+  getDocument(id): Observable<DocumentDto> {
+    return this.http.get<DocumentDto>(`/documents/${id}`);
+  }
+
+  updateDocument(dto: DocumentDto): Observable<void> {
+    return this.http.put<void>(`/documents/${id}`, dto)
   }
 }
+```
 
-// Single responsibility: Activity logging
-class ActivityLogger {
-  logUserActivity(action, user) {
-    console.log(`${action}: ${user.name}`);
-    // Logging logic...
-  }
+--
+
+Translate between representations:
+
+```javascript
+class DocumentMapper {
+  fromDto(dto: DocumentDto): Document { /* ... */ }
+  toDto(doc: Document): DocumentDto { /* ... */ }
 }
 ```
 
 ---
 
-<!-- .slide: data-transition="fade" -->
-## Code Example – Violating SRP
-
-```python
-class Report:
-    def __init__(self, data):
-        self.data = data
-
-    def generate(self):
-        # create report
-        pass
-
-    def save_to_file(self, filename):
-        # violates SRP — persistence logic included
-        with open(filename, 'w') as f:
-            f.write(self.generate())
-```
-
----
-
-<!-- .slide: data-transition="fade" -->
-
-## Code Example – Respecting SRP
-
-```python
-class Report:
-    def __init__(self, data):
-        self.data = data
-
-    def generate(self):
-        # only generates report content
-        return "Report content"
-
-class ReportSaver:
-    def save(self, report, filename):
-        with open(filename, 'w') as f:
-            f.write(report.generate())
-
-```
-Each class now has only one reason to change.
-
----
-
-## Benefits of SRP 🎉
+### Benefits of SRP 🎉
 
 - **Easier to understand** 🧠
 - **Easier to test** 🧪
@@ -196,83 +141,30 @@ Each class now has only one reason to change.
 
 ---
 
-<!-- .slide: data-transition="fade" -->
-## Daily Practice Tips
+### Basic tips 💡
 
-    ✅ Name classes and methods after a single, clear purpose
+Ask yourself ...
 
-    ✅ Extract unrelated behavior into separate classes or modules
+- ... What is the exact scope of my class, module, component? <!-- .element: class="fragment" data-fragment-index="0" -->
+  <!-- Should be possible to precisely describe in one short name!; Coherence -> no free radicals! -->
+- ... What does my class depend on? How much does it do? <!-- .element: class="fragment" data-fragment-index="1" -->
+  <!-- Big numbers (imports, lines) are usually a bad indicator, Multiple import statements for unrelated **libraries** -->
+- ... What are the in- and outputs? <!-- .element: class="fragment" data-fragment-index="2" -->
+  <!-- A big variety often tells a lot already -->
 
-    ✅ Regularly ask: Why would this class need to change?
-
-    ✅ Use unit tests to spot violations (too many responsibilities make testing hard)
-
-    ✅ Refactor when responsibilities grow over time
-
----
-
-## Daily Practice Tips 💡
-
-### 1. Ask the Right Questions
-- What is this class responsible for?
-- How many reasons could it change?
-- Can I describe it in one sentence?
-
-### 2. Watch for Warning Signs
-- Classes with "And" in their name
-- Methods that don't relate to each other
-- Multiple import statements for unrelated libraries
-
----
-
-## Daily Practice Tips (Continued) 💡
-
-### 3. Use the "One Sentence Rule"
-If you can't describe a class's purpose in one clear sentence, it probably violates SRP.
-
-### 4. Follow the "No More Than 7±2" Rule
-- Limit methods per class
-- Keep classes focused and small
-
-### 5. Regular Refactoring
-- Extract methods and classes regularly
-- Look for opportunities to separate concerns
-
----
+--
 
 ## Common Anti-Patterns to Avoid ⚠️
 
-- **God Classes** - Classes that do everything
-- **Utility Classes** - Catch-all static method containers
-- **Manager Classes** - Vague responsibilities
-- **Mixed Concerns** - UI logic mixed with business logic
+- God Classes - Classes that do everything <!-- .element: class="fragment" data-fragment-index="0" -->
+- Utility Classes - Catch-all static method containers <!-- .element: class="fragment" data-fragment-index="1" -->
+- Manager Classes - Vague responsibilities <!-- .element: class="fragment" data-fragment-index="2" -->
+- Mixed Concerns - UI logic mixed with business logic <!-- .element: class="fragment" data-fragment-index="3" -->
 
 ---
 
-## Quick Checklist ✓
-
-Before committing code, ask:
-
-- [ ] Does this class have a single, clear purpose?
-- [ ] Would changes to different features require modifying this class?
-- [ ] Can I easily write unit tests for this class?
-- [ ] Would a new developer understand this class quickly?
-- [ ] Is the class name specific and descriptive?
-
----
-
-## Remember the Bee! 🐝
-
-Just like a worker bee has **one job** - collecting nectar - each class should have **one responsibility**.
-
-*Focus, simplicity, and clarity lead to maintainable code.*
-
----
-
-<!-- .slide: data-transition="fade" -->
 ## Final Thoughts
 
-> "SRP is about people — when two people need to change the same class for different reasons, SRP is violated."
->   — Robert C. Martin
+<img style="float: right; width: 300px" src="https://media2.dev.to/dynamic/image/width=800%2Cheight=%2Cfit=scale-down%2Cgravity=auto%2Cformat=auto/https%3A%2F%2Fdev-to-uploads.s3.amazonaws.com%2Fi%2Fxikbg4cgydydtn3zzf1r.png">
 
-Keep your code clean, focused, and maintainable.
+_"Treat your code as if it was a well-sorted kitchen drawer"_ 😉
